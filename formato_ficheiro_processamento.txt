@@ -2,5 +2,5 @@ DATA,GEO,VALOR
 dm,dm,ft
 dm_date,dm_geographyloures,ft_corine
 year,freguesia_code,artificial_surface
-id,gid,dm_att
-data_id,geographyloures_id,id
+id,gid,id
+data_id,geographyloures_id,none

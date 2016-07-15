@@ -9,8 +9,8 @@
 #   dm,           dm,                   ft                   - Data Fields type
 #   dm_date,      dm_geographyloures,   ft_corine            - Tables name
 #   year,         freguesia_code,       artificial_surface   - Tables attribute for Check/Insert 
-#   id,           gid,                  dm_att               - dm Tables primary key attributes (dummy - field in ft column)
-#   data_id,      geographyloures_id,   id                   - ft Table foreign keys attributes (dummy - ft Table primary key)
+#   id,           gid,                  id                   - dm Tables primary key attributes 
+#   data_id,      geographyloures_id,   none                 - ft Table foreign keys attributes (dummy - none)
 #
 #----------------------------------------------------------------------------------
 
@@ -110,7 +110,11 @@ def parseData(conn, csvProcFileName, csvDataFileName):
 
 	csvData = readCSVFileHeader(csvDataFileName)
 
-	csvProc = readCSVFile(csvProcFileName)
+#	csvProc = readCSVFile(csvProcFileName)
+#	rdProc = readProcessor(csvProcFileName, 'csv')
+	rdProc = readProcessor('eenvplus_model.json', 'json')
+
+	csvProc = rdProc.getProcessorData()
 
 #	pprint (csvProc)
 
@@ -191,9 +195,11 @@ def parseData(conn, csvProcFileName, csvDataFileName):
 						print("empty values from dm_field ")
 						return
 
-#				print (csvProc[hdr][4])
 #				print (csvProc[hdr][1])
-				selectStatement = 'SELECT {0} FROM {1} WHERE {2}'.format(csvProc[hdr][4], csvProc[hdr][1], strWhere)
+#				print (csvProc[hdr][2])
+#				print (csvProc[hdr][3])
+#				print (csvProc[hdr][4])
+				selectStatement = 'SELECT {0} FROM {1} WHERE {2}'.format(csvProc[hdr][3], csvProc[hdr][1], strWhere)
 
 				if (checkDB(conn, selectStatement) == []):
 					insertFields = ''
@@ -208,13 +214,13 @@ def parseData(conn, csvProcFileName, csvDataFileName):
 						insertValues = insertValues + str(column[field][vv])
 
 					# TODO - insert into database not tested
-					insertStatement = 'INSERT INTO {0} ({1}, {2}) VALUES({3}, {4})'.format(csvProc[hdr][1], csvProc[hdr][2],
-											 insertFields, val, insertValues)
+					insertStatement = 'INSERT INTO {0} ({1}, {2}) VALUES({3}, {4})'.format(csvProc[hdr][1], 
+						                     csvProc[hdr][2], insertFields, val, insertValues)
 					print(insertStatement)
 #					insertDB(conn, insertStatement)
 
 					# It's not necessary - only for insertion check purpose
-					maxStatement = 'SELECT max({0}) FROM {1}'.format(csvProc[hdr][4], csvProc[hdr][1])
+					maxStatement = 'SELECT max({0}) FROM {1}'.format(csvProc[hdr][3], csvProc[hdr][1])
 #					print(maxStatement)
 					nextIdLst_dm = checkDB(conn, maxStatement)
 					nextId_dm = nextIdLst_dm[0][0]
@@ -274,13 +280,6 @@ def main(csvProcFileName, csvDataFileName):
 
 if __name__ == "__main__":
 
-	data = readProcessor('eenvplus_model.json', 'json')
 
-	print(data.getProcessorData())
-
-	data = readProcessor('formato_ficheiro_processamento.txt', 'csv')
-
-	print(data.getProcessorData())
-
-#	main('formato_ficheiro_processamento.txt',
-#		 'formato_ficheiro_carregamento.txt')
+	main('formato_ficheiro_processamento.txt',
+		 'formato_ficheiro_carregamento.txt')
