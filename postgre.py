@@ -137,9 +137,16 @@ def parseData(conn, csvProcFileName, csvDataFileName):
 	for hh, hdr in enumerate(column):
 		if (csvProc[hdr][0] == 'dm'):
 
+			filterDataStatement = 'ORDER BY data LIMIT 1'
+
 			for vv, val in enumerate(csvData[hdr]):
-				selectStatement = 'SELECT {0} FROM {1} WHERE {2} = \'{3}\''.format(csvProc[hdr][3], 
-																					csvProc[hdr][1], csvProc[hdr][2], val)
+				if (csvProc[hdr][1] == 'dm_date') :
+					selectStatement = 'SELECT {0} FROM {1} WHERE {2} = \'{3}\' {4}'.format(csvProc[hdr][3], 
+									csvProc[hdr][1], csvProc[hdr][2], val, filterDataStatement)
+				else:	
+					selectStatement = 'SELECT {0} FROM {1} WHERE {2} = \'{3}\''.format(csvProc[hdr][3], 
+													csvProc[hdr][1], csvProc[hdr][2], val)
+
 #				print(selectStatement)
 				tblId = checkDB(conn, selectStatement)
 

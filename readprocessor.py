@@ -2,6 +2,8 @@ from collections import OrderedDict
 import json
 import csv
 
+
+
 class readProcessor:
 
 	def __init__(self, fileName, fileType):
@@ -16,8 +18,11 @@ class readProcessor:
 		if (self.fileType == 'csv'):
 			self.column = self.readCSVFile(self.fileName)
 
-
-	# Read csv fileName data, for header and data
+	"""
+	# Read csv fileName data, for header and processor data 
+	# (when there is no separate header, 
+	# sniffer has_header fails)
+	"""
 	def readCSVFile(self, fileName):
 
 		column = OrderedDict()
@@ -35,6 +40,7 @@ class readProcessor:
 
 		return column
 
+	# Under test to find the best way to read the processor data
 	def readJSONFile(self, fileName):	
 
 		column = OrderedDict()
@@ -73,7 +79,7 @@ class readProcessor:
 						column[h].append(v)
 
 #			print(headers)
-
+            # Read the data from the original model file
 			if (dt == 'locale'):
 				print('---------- locale ---------------')
 				print(data[dt])
