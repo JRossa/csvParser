@@ -14,6 +14,8 @@
 #
 #----------------------------------------------------------------------------------
 
+from collections import OrderedDict
+from readprocessor import *
 
 import psycopg2
 import psycopg2.extras
@@ -51,16 +53,16 @@ def insertDB(conn, statement):
 # Read csv fileName data, for header and data
 def readCSVFileHeader(fileName):
 
-	column = {}
+	column = OrderedDict()
 
 	with open(fileName, 'r') as f:
 		has_header = csv.Sniffer().has_header(f.read(1024))
 #		print (has_header)
 		f.seek(0)  # rewind
 		reader = csv.reader(f)
-
 		if (has_header):
 			headers = next(reader)
+			print('---------', headers)
 
 			column = {h:[] for h in headers}
 			for row in reader:
@@ -73,7 +75,7 @@ def readCSVFileHeader(fileName):
 # Read csv fileName data, for header and processor data (when there is no separate header, sniffer has_header fails)
 def readCSVFile(fileName):
 
-	column = {}
+	column = OrderedDict()
 
 	with open(fileName, 'r') as f:
 		f.seek(0)  # rewind
@@ -85,7 +87,7 @@ def readCSVFile(fileName):
 		for row in reader:
 			for h, v in zip(headers, row):
 				column[h].append(v)
-
+		print(column)
 	return column
 
 
@@ -118,6 +120,7 @@ def parseData(conn, csvProcFileName, csvDataFileName):
 	for v, val in enumerate(csvProc):
 		headers.append(val)
 
+	column = OrderedDict()
 	column = {h:[] for h in headers}
 
 	# Validate the input data
@@ -179,7 +182,7 @@ def parseData(conn, csvProcFileName, csvDataFileName):
 				for ff, dm_field in enumerate(dm_headers):
 					if (len(strWhere) > 0):
 						strWhere = strWhere + ' AND '
-					# WARNING - same times I get empty values from dm_field 
+					# WARNING - some times it gets empty values from dm_field 
 					#           UnboundLocalError: local variable 'dm_field' referenced before assignment
 					try:	
 						strWhere = strWhere + csvProc[dm_field][4] + ' = ' + str(column[dm_field][vv])
@@ -271,5 +274,13 @@ def main(csvProcFileName, csvDataFileName):
 
 if __name__ == "__main__":
 
-	main('formato_ficheiro_processamento.txt',
-		 'formato_ficheiro_carregamento.txt')
+	data = readProcessor('eenvplus_model.json', 'json')
+
+	print(data.getProcessorData())
+
+	data = readProcessor('formato_ficheiro_processamento.txt', 'csv')
+
+	print(data.getProcessorData())
+
+#	main('formato_ficheiro_processamento.txt',
+#		 'formato_ficheiro_carregamento.txt')
