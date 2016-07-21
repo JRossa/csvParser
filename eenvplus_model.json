@@ -1,0 +1,161 @@
+{
+   "name" : "eenvplus",
+   "locale":"en",
+   "cubes": [
+        {
+        "name": "cos",
+        "processor" :
+           {
+            "value" : "artificial_surface",
+            "pkey" : "id"},
+       "label": "Carta ocupacao solo",
+        "measures" : [
+          {"name": "artificial_surface", "label": "Superfície artificial", "info": {"units": "m2", "name": "Superfície artificial"}}
+        ],
+        "dimensions": [
+          {"name": "geographyloures", "hierarchies": ["default"]},
+         "date"
+         ],
+        "joins": [
+          {"master": "geographyloures_id", "detail": "dm_geographyloures.gid"},
+          {"master": "date_id", "detail": "dm_date.id"}
+        ],
+
+
+        "aggregates": [
+          {"name": "artificial_surface sum", "function": "sum", "measure": "artificial_surface"}
+        ]
+        },
+
+        {
+       "name": "corine",
+       "processor" :
+            {
+             "value" : "artificial_surface",
+             "pkey" : "id"},
+       "label": "Corine Land Cover",
+        "measures" : [
+            {"name": "artificial_surface", "label": "Superfície artificializada", "info": {"units": "m2", "name": "Superfície artificial"}}
+        ],
+        "dimensions": [
+          "geographyloures",
+          "date"
+        ],
+        "joins": [
+          {"master": "geography_id", "detail": "dm_geographyloures.gid"},
+          {"master": "date_id", "detail": "dm_date.id"}
+        ],
+        "aggregates": [
+           {"name": "artificial_surface sum", "function": "sum", "measure": "artificial_surface"}
+
+        ]
+        },
+
+        {
+        "name": "populacao",
+        "processor" :
+            {
+             "value" : "populacao",
+             "pkey" : "id"},
+        "label": "População",
+        "measures" : [
+            {"name": "populacao", "label": "População", "info": {"units": "pessoas", "name": "Pessoas"}}
+        ],
+        "dimensions": [
+           {"name": "geographyloures", "hierarchies": ["default"]},
+           "date"
+           ],
+         "joins": [
+            {"master": "geographyloures_id", "detail": "dm_geographyloures.gid"},
+            {"master": "data_id", "detail": "dm_date.id"}
+        ],
+         "aggregates": [
+                 {"name": "populacao sum", "function": "sum", "measure": "populacao"}
+            ]
+        }
+        ],
+
+
+   "dimensions": [
+
+        {
+        "name":"date",
+        "processor" :
+              {
+              "value" : "year",
+              "pkey" : "id",
+              "fkey" : "data_id"},
+        "label":"Data",
+        "levels" : [
+
+            {
+              "name":"year",
+              "key":"year",
+              "label": "ano",
+              "attributes": [
+                  {"name":"year", "label": "ano"}
+                  ]
+            },
+
+          {
+              "name":"month_year",
+              "key":"month_year",
+              "label": "mes ano",
+              "attributes": [
+                  {"name":"month_year", "label": "mes ano"}
+                  ]
+            },
+
+            {
+              "name":"month_name",
+              "key":"month_name",
+              "label": "nome mes",
+              "attributes": [
+                  {"name":"month_name", "label": "nome mes"}
+                  ]
+            },
+
+             {
+                "name":"date",
+                  "key": "id",
+                  "label_attribute": "data",
+                  "attributes": [{"name":"id"}, {"name":"data", "label": "data"}]
+             }
+             ],
+           "hierarchy": ["year", "month_year", "month_name", "date"]
+
+        },
+
+        {
+        "name":"geographyloures",
+        "processor" :
+              {
+              "value" : "freguesia_code",
+              "pkey" : "gid",
+              "fkey" : "geographyloures_id"},
+         "label":"Localização",
+         "levels" : [
+           {
+             "name":"freguesia",
+             "key": "freguesia",
+               "attributes": [
+                 {"name":"freguesia_code", "label": "freguesia code"},
+                 {"name":"freguesia", "label": "freguesia"}
+                ]
+           },
+           {
+             "name":"areas",
+             "key":"areas",
+             "attributes": [
+                 {"name":"areas_code", "label": "areas code"},
+                 {"name":"areas", "label": "areas"}
+                 ]
+         }
+         ],
+         "hierarchies": [{
+             "name": "default",
+             "levels": ["freguesia", "areas"]
+         }]
+       }
+     ]
+}

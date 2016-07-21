@@ -9,11 +9,14 @@
 #   dm,           dm,                   ft                   - Data Fields type
 #   dm_date,      dm_geographyloures,   ft_corine            - Tables name
 #   year,         freguesia_code,       artificial_surface   - Tables attribute for Check/Insert 
-#   id,           gid,                  dm_att               - dm Tables primary key attributes (dummy - field in ft column)
-#   data_id,      geographyloures_id,   id                   - ft Table foreign keys attributes (dummy - ft Table primary key)
+#   id,           gid,                  id                   - dm Tables primary key attributes 
+#   data_id,      geographyloures_id,   none                 - ft Table foreign keys attributes (dummy - none)
 #
 #----------------------------------------------------------------------------------
 
+from collections import OrderedDict
+from readprocessor_df import *
+from readexcel_df import *
 
 import psycopg2
 import psycopg2.extras
@@ -48,149 +51,134 @@ def insertDB(conn, statement):
 	return True
 
 
-# Read csv fileName data, for header and data
-def readCSVFileHeader(fileName):
+def createTable(conn, ft_tableName, measure):
 
-	column = {}
+	createStatement = "CREATE TABLE public.ft_" + ft_tableName +" " \
+		"( " \
+  			"id integer NOT NULL DEFAULT nextval('ft_" + ft_tableName + "_id_seq'::regclass), " \
+  			"data_id integer, "  \
+  			"geographyloures_id integer, " + \
+			measure + " double precision, " \
+  			"CONSTRAINT ft_" + ft_tableName + "_pkey PRIMARY KEY (id) " \
+		")"
 
-	with open(fileName, 'r') as f:
-		has_header = csv.Sniffer().has_header(f.read(1024))
-#		print (has_header)
-		f.seek(0)  # rewind
-		reader = csv.reader(f)
+	ckeckStatement = 'SELECT to_regclass(\'public.' + ft_tableName + '\')'
+	print ckeckStatement
 
-		if (has_header):
-			headers = next(reader)
+	cursor = conn.cursor()
+	cursor.execute(ckeckStatement)
 
-			column = {h:[] for h in headers}
-			for row in reader:
-				for h, v in zip(headers, row):
-					column[h].append(v)
+	rSet = cursor.fetchall()
+	print rSet[0][0]
+	print str(rSet[0][0]) == 'None'
 
-	return column
+	cursor.close()
 
-
-# Read csv fileName data, for header and processor data (when there is no separate header, sniffer has_header fails)
-def readCSVFile(fileName):
-
-	column = {}
-
-	with open(fileName, 'r') as f:
-		f.seek(0)  # rewind
-		reader = csv.reader(f)
-
-		headers = next(reader)
-
-		column = {h:[] for h in headers}
-		for row in reader:
-			for h, v in zip(headers, row):
-				column[h].append(v)
-
-	return column
+	print createStatement
 
 
-# Check for the consistency of headers fields 
 def validateHeaders(dataHdr, procHdr):
 
-	for hh, hdr in enumerate(procHdr):
-		print(hdr)
-		try:
-			print(procHdr[hdr] == [])
-		except:
-			print("False")
-			return False
+	pHdr = procHdr.columns.values.tolist()
+	dHdr = dataHdr.columns.values.tolist()
 
-	return True
+	return  len(set(pHdr).intersection(dHdr)) == len(pHdr)
 
 
 # Parsing process
-def parseData(conn, csvProcFileName, csvDataFileName):
+def parseData(conn, ProcFileName, DataFileName):
 
-	csvData = readCSVFileHeader(csvDataFileName)
 
-	csvProc = readCSVFile(csvProcFileName)
+	rdXL = readExcel(DataFileName, 'csv')
+	rdXL = readExcel('indicadores.xlsx', 'xls', 'indicadores',
+					 'DICOFRE', 'AREA_T_HA')
 
-#	pprint (csvProc)
+	dfXL = rdXL.getExcelData()
 
-	headers = []
+	createTable(conn, "ft_populacao", "populacao")
+	return
 
-	# Create the headers os column data fields to store the primary keys of dm and ft tables
-	for v, val in enumerate(csvProc):
-		headers.append(val)
+	dfPKey = pd.DataFrame(index=dfXL.index, columns=dfXL.columns)
 
-	column = {h:[] for h in headers}
+	rdProc = readProcessor(ProcFileName, 'csv')
+#	rdProc = readProcessor('eenvplus_model.json', 'json', 0)
+
+	dfProc = rdProc.getProcessorData()
+
+#	print dfProc
+#	print dfXL
+#	print dfPKey
 
 	# Validate the input data
-	if (not validateHeaders(csvData, column)):
+	if (not validateHeaders(dfXL, dfProc)):
 		print("Headers does not match !!")
 		return
 
-	# For each dm field insert into dm table if it does not exists
-	# and store the id value 
-	for hh, hdr in enumerate(column):
-		if (csvProc[hdr][0] == 'dm'):
+	for column in dfXL:
+		if (dfProc.ix['type', column] == 'dm'):
+#			print dfXL[column]
 
-			for vv, val in enumerate(csvData[hdr]):
-				selectStatement = 'SELECT {0} FROM {1} WHERE {2} = \'{3}\''.format(csvProc[hdr][3], 
-																					csvProc[hdr][1], csvProc[hdr][2], val)
-#				print(selectStatement)
+			filterDataStatement = 'ORDER BY data LIMIT 1'
+
+			for ind, val in enumerate(dfXL[column]):
+
+				if (dfProc.ix['table', column] == 'dm_date') :
+					selectStatement = 'SELECT {0} FROM {1} WHERE {2} = \'{3}\' {4}'.format(dfProc.ix['pkey', column],
+									dfProc.ix['table', column], dfProc.ix['value', column], val, filterDataStatement)
+				else:
+					selectStatement = 'SELECT {0} FROM {1} WHERE {2} = \'{3}\''.format(dfProc.ix['pkey', column],
+													dfProc.ix['table', column], dfProc.ix['value', column], val)
+
+#				print val
+				print selectStatement
 				tblId = checkDB(conn, selectStatement)
 
 #				print (tblId)
 				if (tblId == []):
 					# TODO - insert into database not tested
-					insertStatement = 'INSERT INTO {0} ({1}) VALUES({2})'.format(csvProc[hdr][1], csvProc[hdr][2], val)
-					print(insertStatement)
+					insertStatement = 'INSERT INTO {0} ({1}) VALUES(\'{2}\')'.format(dfProc.ix['table', column],
+																				 dfProc.ix['value', column], val)
+#					print(insertStatement)
 #					insertDB(conn, insertStatement)
 
-					maxStatement = 'SELECT max({0}) FROM {1}'.format(csvProc[hdr][3], csvProc[hdr][1])
+					maxStatement = 'SELECT max({0}) FROM {1}'.format(dfProc.ix['pkey', column],
+																	 dfProc.ix['table', column])
 
-					nextIdLst_dm = checkDB(conn, maxStatement)
-					nextId_dm = nextIdLst_dm[0][0]
-					column[hdr].append(nextId_dm)
+					maxIdLst_dm = checkDB(conn, maxStatement)
+					maxId_dm = maxIdLst_dm[0][0]
+
+					dfPKey.at[ind,column] =  maxId_dm
 				else:
-					column[hdr].append(tblId[0][0])
+					dfPKey.at[ind,column] = tblId[0][0]
 
-	# set the dm fields to be used to construct the where expressions				
+	# set the dm fields to be used to construct the where expressions
 	dm_headers = []     # dm headers names
 	ft_joinFields = []  # ft join fields names
 
-	for hh, hdr in enumerate(column):
-		if (csvProc[hdr][0] == 'dm'):
-				dm_headers.append(headers[hh])
-				ft_joinFields.append(csvProc[hdr][4])
+	for column in dfXL:
+		if (dfProc.ix['type', column] == 'dm'):
+				dm_headers.append(column)
+				ft_joinFields.append(dfProc.ix['fkey', column])
 
 #	print (dm_headers)
 #	print (ft_joinFields)
-#	print (column)
 
 	# Check if the set of dm id's already exists in ft table
 	# if not insert into ft table
-	for hh, hdr in enumerate(column):
-		if (csvProc[hdr][0] == 'ft'):
-			for vv, val in enumerate(csvData[hdr]):
-				# print (vv, "   ", csvProc[hdr][0])
-				# print (csvProc[hdr][4])
-				# print (csvProc[hdr][1])
-				# print (csvProc[hdr][2])
+	for column in dfXL:
+		if (dfProc.ix['type', column] == 'ft'):
+			for ind, val in enumerate(dfXL[column]):
 
 				strWhere = ""
 				# Construct the sql filter string with the dm fields to check inside the ft table
-				for ff, dm_field in enumerate(dm_headers):
+				for dm_field in dm_headers:
 					if (len(strWhere) > 0):
 						strWhere = strWhere + ' AND '
-					# WARNING - same times I get empty values from dm_field 
-					#           UnboundLocalError: local variable 'dm_field' referenced before assignment
-					try:	
-						strWhere = strWhere + csvProc[dm_field][4] + ' = ' + str(column[dm_field][vv])
-					except:
-						print("hh = ", hh, "vv = ", vv, " ff = ", ff, " Field = ", dm_field, "  Str = ", strWhere)
-						print("empty values from dm_field ")
-						return
 
-#				print (csvProc[hdr][4])
-#				print (csvProc[hdr][1])
-				selectStatement = 'SELECT {0} FROM {1} WHERE {2}'.format(csvProc[hdr][4], csvProc[hdr][1], strWhere)
+					strWhere = strWhere + dfProc.ix['fkey', dm_field] + ' = ' + str(dfPKey.ix[ind, dm_field])
+
+				selectStatement = 'SELECT {0} FROM {1} WHERE {2}'.format(dfProc.ix['pkey', column],
+																		 dfProc.ix['table', column], strWhere)
 
 				if (checkDB(conn, selectStatement) == []):
 					insertFields = ''
@@ -202,22 +190,24 @@ def parseData(conn, csvProcFileName, csvDataFileName):
 							insertFields = insertFields + ', '
 							insertValues = insertValues + ', '
 						insertFields = insertFields + str(ft_joinFields[ff])
-						insertValues = insertValues + str(column[field][vv])
+						insertValues = insertValues + str(dfPKey.ix[ind, field])
 
 					# TODO - insert into database not tested
-					insertStatement = 'INSERT INTO {0} ({1}, {2}) VALUES({3}, {4})'.format(csvProc[hdr][1], csvProc[hdr][2],
-											 insertFields, val, insertValues)
+					insertStatement = 'INSERT INTO {0} ({1}, {2}) VALUES({3}, {4})'.format(dfProc.ix['table', column],
+						                     dfProc.ix['value', column], insertFields, val, insertValues)
 					print(insertStatement)
 #					insertDB(conn, insertStatement)
 
 					# It's not necessary - only for insertion check purpose
-					maxStatement = 'SELECT max({0}) FROM {1}'.format(csvProc[hdr][4], csvProc[hdr][1])
+					maxStatement = 'SELECT max({0}) FROM {1}'.format(dfProc.ix['pkey', column],
+																	 dfProc.ix['table', column])
 #					print(maxStatement)
-					nextIdLst_dm = checkDB(conn, maxStatement)
-					nextId_dm = nextIdLst_dm[0][0]
-					print (nextId_dm)
+					maxIdLst_dm = checkDB(conn, maxStatement)
+					dfPKey.at[ind,column] = maxIdLst_dm[0][0]
 
-#	print (column)
+
+	print dfPKey
+
 
 
 
@@ -270,6 +260,7 @@ def main(csvProcFileName, csvDataFileName):
 	parseData(conn, csvProcFileName, csvDataFileName)
 
 if __name__ == "__main__":
+
 
 	main('formato_ficheiro_processamento.txt',
 		 'formato_ficheiro_carregamento.txt')
