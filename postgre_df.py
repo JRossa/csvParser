@@ -51,18 +51,38 @@ def insertDB(conn, statement):
 	return True
 
 
-def createTable(conn, ft_tableName, measure):
+def createTableFT(conn, ft_tableName, measure):
+
+# 			"id integer NOT NULL DEFAULT nextval('ft_" + ft_tableName + "_id_seq'::regclass), " \
 
 	createStatement = "CREATE TABLE public.ft_" + ft_tableName +" " \
 		"( " \
-  			"id integer NOT NULL DEFAULT nextval('ft_" + ft_tableName + "_id_seq'::regclass), " \
+ 			"id integer NOT NULL DEFAULT nextval('ft_" + ft_tableName + "_id_seq'::regclass), " \
   			"data_id integer, "  \
   			"geographyloures_id integer, " + \
-			measure + " double precision, " \
+			measure + " integer, " \
   			"CONSTRAINT ft_" + ft_tableName + "_pkey PRIMARY KEY (id) " \
 		")"
+	print createStatement
 
-	ckeckStatement = 'SELECT to_regclass(\'public.' + ft_tableName + '\')'
+	alterTableStatement = "ALTER TABLE public.ft_" + ft_tableName + " " \
+    							"OWNER TO postgres;"
+
+	createSeqStatement = "CREATE SEQUENCE public.ft_" + ft_tableName + "_id_seq " \
+  							"INCREMENT 1 " \
+  							"MINVALUE 1 " \
+  							"MAXVALUE 9223372036854775807 " \
+  							"START 1 " \
+  							"CACHE 1; "
+
+	alterTableSeqStatement = "ALTER TABLE public.ft_" + ft_tableName + "_id_seq " \
+  							"OWNER TO postgres;"
+
+
+	grantPostGresStatement = "GRANT ALL ON TABLE public.ft_" + ft_tableName + " TO postgres;"
+	grantPublicStatement = "GRANT SELECT ON TABLE public.ft_" + ft_tableName + " TO public;"
+
+	ckeckStatement = 'SELECT to_regclass(\'public.ft_' + ft_tableName + '\')'
 	print ckeckStatement
 
 	cursor = conn.cursor()
@@ -70,11 +90,30 @@ def createTable(conn, ft_tableName, measure):
 
 	rSet = cursor.fetchall()
 	print rSet[0][0]
-	print str(rSet[0][0]) == 'None'
 
-	cursor.close()
+	if str(rSet[0][0]) == 'None':
+		cursor.close()
 
-	print createStatement
+		cursor = conn.cursor()
+		cursor.execute(createSeqStatement)
+		conn.commit()
+		cursor.execute(alterTableSeqStatement)
+		conn.commit()
+
+		cursor.execute(createStatement)
+		conn.commit()
+
+		cursor.execute(alterTableStatement)
+		conn.commit()
+		cursor.execute(grantPostGresStatement)
+		conn.commit()
+		cursor.execute(grantPublicStatement)
+		conn.commit()
+
+		cursor.close()
+
+
+
 
 
 def validateHeaders(dataHdr, procHdr):
@@ -88,15 +127,26 @@ def validateHeaders(dataHdr, procHdr):
 # Parsing process
 def parseData(conn, ProcFileName, DataFileName):
 
+	__DB_Test1 = False
+	__XL_Test1 = True
 
 	rdXL = readExcel(DataFileName, 'csv')
-	rdXL = readExcel('indicadores.xlsx', 'xls', 'indicadores',
-					 'DICOFRE', 'AREA_T_HA')
+
+	if (__XL_Test1 == True):
+		rdXL = readExcel('indicadores.xlsx', 'xls', 'indicadores',
+						 ['date', 'DICOFRE', 'AREA_T_HA' ])
+		return
 
 	dfXL = rdXL.getExcelData()
 
-	createTable(conn, "ft_populacao", "populacao")
-	return
+
+	if (__DB_Test1 == True):
+		createTableFT(conn, "populacao", "populacao")
+
+		insertStatement = 'INSERT INTO ft_populacao (data_id, geographyloures_id, populacao) VALUES(1, 5, 300000)'
+		insertDB(conn, insertStatement)
+
+		return
 
 	dfPKey = pd.DataFrame(index=dfXL.index, columns=dfXL.columns)
 

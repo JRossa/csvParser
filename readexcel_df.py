@@ -6,13 +6,13 @@ import pprint
 
 class readExcel:
 
-	def __init__(self, fileName, fileType, workSheet=None, col1=None, col2=None):
+	def __init__(self, fileName, fileType, workSheet=None, columns=None):
 		self.fileName = fileName
 		self.fileType = fileType
 		self.workSheet = workSheet
 
 		if (self.fileType == 'xls'):
-			self.df = self.readXLSFile(self.fileName, workSheet, col1, col2)
+			self.df = self.readXLSFile(self.fileName, workSheet, columns)
 
 		if (self.fileType == 'csv'):
 			self.df = self.readCSVFile(self.fileName)
@@ -28,14 +28,14 @@ class readExcel:
 		return dfcsv
 
 
-	def readXLSFile(self, fileName, workSheet, col1, col2):
+	def readXLSFile(self, fileName, workSheet, columns):
 
 		pp = pprint.PrettyPrinter(indent=4)
-		col_lst =[col1, col2]
-		print col_lst
+
+		print columns
 		rdxls = pd.read_excel(fileName, sheetname=workSheet)
 
-		dfxls = pd.DataFrame(rdxls, columns=col_lst)
+		dfxls = pd.DataFrame(rdxls, columns=columns)
 		pp.pprint(dfxls)
 
 		return dfxls
