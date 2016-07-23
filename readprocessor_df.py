@@ -6,12 +6,12 @@ import pprint
 
 class readProcessor:
 
-	def __init__(self, fileName, fileType, ind=None):
+	def __init__(self, fileName, fileType, ft_name=None):
 		self.fileName = fileName
 		self.fileType = fileType
 
 		if (self.fileType == 'json'):
-			self.df = self.readJSONFile(self.fileName, ind)
+			self.df = self.readJSONFile(self.fileName, ft_name)
 
 		if (self.fileType == 'csv'):
 			self.df = self.readCSVFile(self.fileName)
@@ -30,7 +30,7 @@ class readProcessor:
 		return dfcsv
 
 
-	def readJSONFile(self, fileName, ind):
+	def readJSONFile(self, fileName, ft_name):
 		pp = pprint.PrettyPrinter(indent=4)
 
 		# read json file - series (dataframe doesn't work)
@@ -88,7 +88,7 @@ class readProcessor:
 #			pp.pprint (dict)
 
 			# select the ind ft
-			if cc == ind:
+			if dfc.ix[cc, ['name']][0] == ft_name:
 				break
 
 		return jdf
