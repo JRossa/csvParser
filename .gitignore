@@ -64,8 +64,9 @@ target/
 
 # Files to keep out of tracking
 .idea/
-excelreader/
+#excelreader/
 testes_py35/
 
+preadjson.py
 *.zip
-*.txt
+#*.txt

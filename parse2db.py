@@ -85,11 +85,12 @@ def parseData(ProcFileName, DataFileName):
 		if (dfProc.ix['type', column] == 'dm'):
 #			print dfXL[column]
 
-			filterDataStatement = 'ORDER BY data LIMIT 1'
-
 			for ind, val in enumerate(dfXL[column]):
 
 				if (dfProc.ix['table', column] == 'dm_date') :
+					filterDataStatement = 'ORDER BY data LIMIT 1'
+
+					# TODO - check if date has 4, 6 or 8 chars and insert the 1st day in data + month_...
 					selectStatement = 'SELECT {0} FROM {1} WHERE {2} = \'{3}\' {4}'.format(dfProc.ix['pkey', column],
 									dfProc.ix['table', column], dfProc.ix['value', column], val, filterDataStatement)
 				else:
