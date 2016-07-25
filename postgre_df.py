@@ -117,8 +117,8 @@ class postgresDB:
 
 #		ckeckStatement = 'SELECT to_regclass(\'public.ft_' + ft_tableName + '\')'
 		ckeckStatement = 'SELECT EXISTS (SELECT 1 FROM   information_schema.tables ' \
-   							'WHERE  table_schema = "public" '\
-   							'AND table_name = ' + ft_tableName + ')'
+   							'WHERE table_schema = \'public\' AND ' \
+   							'table_name = \'ft_' + ft_tableName + '\')'
 
 		print ckeckStatement
 
@@ -127,9 +127,9 @@ class postgresDB:
 
 		rSet = cursor.fetchall()
 		print rSet[0][0]
-		exit(0)
 
-		if str(rSet[0][0]) == 'None':
+#		if str(rSet[0][0]) == 'None':
+		if rSet[0][0] == False:
 			cursor.close()
 
 			cursor = self.conn.cursor()
@@ -173,10 +173,10 @@ class postgresDB:
 		grantPostGresStatement = "GRANT ALL ON TABLE public.ft_" + ft_tableName + " TO postgres;"
 		grantPublicStatement = "GRANT SELECT ON TABLE public.ft_" + ft_tableName + " TO public;"
 
-#		ckeckStatement = 'SELECT to_regclass(\'public.ft_' + ft_tableName + '\')'
+		ckeckStatement = 'SELECT to_regclass(\'public.ft_' + ft_tableName + '\')'
 		ckeckStatement = 'SELECT EXISTS (SELECT 1 FROM   information_schema.tables ' \
-   							'WHERE  table_schema = "public" '\
-   							'AND table_name = ' + ft_tableName + ')'
+   							'WHERE table_schema = \'public\' AND ' \
+   							'table_name = \'ft_' + ft_tableName + '\')'
 		print ckeckStatement
 
 		cursor = self.conn.cursor()
@@ -185,7 +185,9 @@ class postgresDB:
 		rSet = cursor.fetchall()
 		print rSet[0][0]
 
-		if str(rSet[0][0]) == 'None':
+
+#		if str(rSet[0][0]) == 'None':
+		if rSet[0][0] == False:
 			cursor.close()
 
 			cursor = self.conn.cursor()
