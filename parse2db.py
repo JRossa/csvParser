@@ -147,8 +147,8 @@ def test1(procFileName, procType, dataFileName,  dataType):
 	__DB_Test = False
 
 	# Initial csv txt files version
-	rdXL = readExcel(dataFileName, procType)
-	rdProc = readProcessor(procFileName,  dataType)
+	rdXL = readExcel(dataFileName, dataType)
+	rdProc = readProcessor(procFileName,  procType)
 
 	pgDB = postgresDB()
 	dfProc = rdProc.getProcessorData()
@@ -235,17 +235,26 @@ def test3(procFileName, procType, procFtName, dataFileName, dataType, sheetName,
 
 def test7(dataFileName, dataType, sheetName, configParam):
 
+	__fileName = 'excelreader/' + dataFileName
 
+	rdXL = readExcel(__fileName, dataType)
+	dfXL = rdXL.getExcelMetaData(__fileName, sheetName, configParam)
+
+	print json.dumps(dfXL)
+
+
+def test8(dataFileName,  dataType, sheetName=None):
+
+	# Initial csv txt files version
 	rdXL = readExcel(dataFileName, dataType)
-	dfXL = rdXL.getExcelMetaData(dataFileName, sheetName, configParam)
+	dfXL = rdXL.getExcelData()
 
-	print dfXL
-
+	print json.dumps(list(set(dfXL.columns)))
 
 
 if __name__ == "__main__":
 
-	__def_Test = 4
+	__def_Test = 8
 
 	if __def_Test == 1:
 		# Initial csv txt files (date, geo, data) version
@@ -273,5 +282,11 @@ if __name__ == "__main__":
 		# excel file reads file metadata
 		test7('producao_vinicola_declarada_vinho.xls', '', 'Quadro',
 			            {'delete_rows': [0,1,2,3,4,6], 'filldown':[0], 'fillright':[0], 'multi-index': 1})
+	elif  __def_Test == 9:
+		# excel file reads file metadata
+		test8('formato_ficheiro_processamento.txt', 'csv')
+	elif  __def_Test == 10:
+		# excel file reads file metadata
+		test8('indicadores.xlsx', 'xls', 'indicadores')
 	else:
 		print "no test option"

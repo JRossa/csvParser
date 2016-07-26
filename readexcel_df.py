@@ -42,8 +42,12 @@ class readExcel:
 		print columnsSearch
 		rdxls = pd.read_excel(fileName, sheetname=workSheet)
 
-		dfxls = pd.DataFrame(rdxls, columns=columnsSearch)
-		dfxls.columns = columnsPrint
+		if columnsSearch == None:
+			dfxls = pd.DataFrame()
+			dfxls = rdxls['indicadores']
+		else:
+			dfxls = pd.DataFrame(rdxls, columns=columnsSearch)
+			dfxls.columns = columnsPrint
 
 #		pp.pprint(dfxls)
 
