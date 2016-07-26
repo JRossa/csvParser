@@ -35,47 +35,9 @@ def validateHeaders(dataHdr, procHdr):
 
 
 # Parsing process
-def parseData(ProcFileName, DataFileName):
-
-	__DB_Test1 = True
-	__XL_Test1 = True
-
-	__def_ft_name = 'populacao'
-	__def_ft_attr = 'populacao integer'
-	__def_sheet_name = 'indicadores'
-
-	pgDB = postgresDB()
-
-	if (__XL_Test1 == True):
-		# From xls file (non ine)
-		DataFileName = 'indicadores.xlsx'
-		ProcFileName = 'eenvplus_model.json'
-		rdXL = readExcel(DataFileName, 'xls', __def_sheet_name,
-						 ['date', 'DICOFRE', 'TOT_POP91' ], ['year', 'freguesia_code', __def_ft_name])
-		rdProc = readProcessor(ProcFileName, 'json', __def_ft_name)
-	else:
-		# Initial csv txt files version
-		rdXL = readExcel(DataFileName, 'csv')
-		rdProc = readProcessor(ProcFileName, 'csv')
-
-	dfXL = rdXL.getExcelData()
+def parseData(pgDB, dfProc, dfXL, insertDB):
 
 	dfPKey = pd.DataFrame(index=dfXL.index, columns=dfXL.columns)
-
-	dfProc = rdProc.getProcessorData()
-
-
-#	print dfProc
-#	print dfXL
-#	print dfPKey
-	if __DB_Test1 == True:
-		pgDB.createTableFT(__def_ft_name, dfProc.ix['fkey', 0],
-		                                  dfProc.ix['fkey', 1], __def_ft_attr)
-		insertStatement = 'INSERT INTO ft_populacao (' + dfProc.ix['fkey', 0] + ', ' + \
-						                        	     dfProc.ix["fkey", 1] + ', populacao) VALUES(1, 5, 300000)'
-#		pgDB.insertDB(insertStatement)
-
-
 
 	if not validateHeaders(dfXL, dfProc):
 		print("Headers does not match !!")
@@ -106,8 +68,9 @@ def parseData(ProcFileName, DataFileName):
 					# TODO - insert into database not tested
 					insertStatement = 'INSERT INTO {0} ({1}) VALUES(\'{2}\')'.format(dfProc.ix['table', column],
 																				 dfProc.ix['value', column], val)
-#					print(insertStatement)
-#					pgDB.insertDB(insertStatement)
+					print(insertStatement)
+					if insertDB == True:
+						pgDB.insertDB(insertStatement)
 
 					maxStatement = 'SELECT max({0}) FROM {1}'.format(dfProc.ix['pkey', column],
 																	 dfProc.ix['table', column])
@@ -163,8 +126,10 @@ def parseData(ProcFileName, DataFileName):
 					# TODO - insert into database not tested
 					insertStatement = 'INSERT INTO {0} ({1}, {2}) VALUES({3}, {4})'.format(dfProc.ix['table', column],
 						                     dfProc.ix['value', column], insertFields, val, insertValues)
+
 					print(insertStatement)
-					pgDB.insertDB(insertStatement)
+					if insertDB == True:
+						pgDB.insertDB(insertStatement)
 
 					# It's not necessary - only for insertion check purpose
 					maxStatement = 'SELECT max({0}) FROM {1}'.format(dfProc.ix['pkey', column],
@@ -177,9 +142,136 @@ def parseData(ProcFileName, DataFileName):
 	print dfPKey
 
 
+def test1(procFileName, procType, dataFileName,  dataType):
+
+	__DB_Test = False
+
+	# Initial csv txt files version
+	rdXL = readExcel(dataFileName, procType)
+	rdProc = readProcessor(procFileName,  dataType)
+
+	pgDB = postgresDB()
+	dfProc = rdProc.getProcessorData()
+	dfXL = rdXL.getExcelData()
+
+	if __DB_Test == True:
+		__def_ft_attr = dfProc.columns[-1:][0] + ' integer'
+
+		pgDB.createTableFT(dfProc.ix['table', 2], dfProc.ix['fkey', 0],
+		                                  dfProc.ix['fkey', 1], __def_ft_attr)
+
+	print dfProc
+
+	print dfXL
+#	print dfPKey
+
+	parseData(pgDB, dfProc, dfXL, False)
+
+
+def test2(procFileName, procType, dataFileName, dataType, sheetName, columnsSearch, ftName):
+
+	__DB_Test = True
+
+	rdProc = readProcessor(procFileName, procType, ftName)
+	dfProc = rdProc.getProcessorData()
+
+	rdXL = readExcel(dataFileName, dataType, sheetName,
+					 columnsSearch, dfProc.columns.tolist())
+
+	pgDB = postgresDB()
+	dfXL = rdXL.getExcelData()
+
+	if __DB_Test == True:
+		__def_ft_attr = dfProc.columns[-1:][0] + ' integer'
+
+		pgDB.createTableFT(dfProc.ix['table', 2], dfProc.ix['fkey', 0],
+		                                  dfProc.ix['fkey', 1], __def_ft_attr)
+		insertStatement = 'INSERT INTO ft_populacao (' + dfProc.ix['fkey', 0] + ', ' + \
+						                        	     dfProc.ix["fkey", 1] + ', populacao) VALUES(1, 5, 300000)'
+#		pgDB.insertDB(insertStatement)
+
+	print dfProc
+
+	print dfXL
+#	print dfPKey
+
+	parseData(pgDB, dfProc, dfXL, True)
+
+
+def test3(procFileName, procType, procFtName, dataFileName, dataType, sheetName, columnsSearch, configParam):
+
+	__DB_Test = False
+
+	__fileName = 'excelreader/' + dataFileName
+
+	rdProc = readProcessor(procFileName, procType, procFtName)
+	dfProc = rdProc.getProcessorData()
+
+	__dataFileName = 'excelreader/' + dataFileName
+
+	rdXL = readExcel(__dataFileName, dataType, sheetName,
+					 columnsSearch, dfProc.columns.tolist(), configParam)
+
+	pgDB = postgresDB()
+	dfXL = rdXL.getExcelData()
+
+	if __DB_Test == True:
+		__def_ft_attr = dfProc.columns[-1:][0] + ' integer'
+
+		pgDB.createTableFT(dfProc.ix['table', 2], dfProc.ix['fkey', 0],
+		                                  dfProc.ix['fkey', 1], __def_ft_attr)
+		insertStatement = 'INSERT INTO ft_populacao (' + dfProc.ix['fkey', 0] + ', ' + \
+						                        	     dfProc.ix["fkey", 1] + ', populacao) VALUES(1, 5, 300000)'
+#		pgDB.insertDB(insertStatement)
+
+	print dfProc
+
+	print dfXL
+#	print dfPKey
+
+	parseData(pgDB, dfProc, dfXL, False)
+
+
+
+def test7(dataFileName, dataType, sheetName, configParam):
+
+
+	rdXL = readExcel(dataFileName, dataType)
+	dfXL = rdXL.getExcelMetaData(dataFileName, sheetName, configParam)
+
+	print dfXL
+
+
 
 if __name__ == "__main__":
 
+	__def_Test = 4
 
-
-    parseData('formato_ficheiro_processamento.txt', 'formato_ficheiro_carregamento.txt')
+	if __def_Test == 1:
+		# Initial csv txt files (date, geo, data) version
+		test1('formato_ficheiro_processamento.txt', 'csv', 'formato_ficheiro_carregamento.txt', 'csv')
+	elif  __def_Test == 2:
+		# excel file (non ine) with (date, geo, [select measure]) version
+		test2('eenvplus_model.json', 'json', 'indicadores.xlsx', 'xls', 'indicadores', ['date', 'DICOFRE', 'TOT_POP91' ], 'populacao')
+	elif  __def_Test == 3:
+		# excel file (ine) with (date, geo, [select measure]) version
+		test3('eenvplus_model.json', 'json', 'cos',
+			      'superficie_uso_industrial_solo.xls', 'xls_ine', 'Quadro',
+			            {'date': '2013', 'geo' : 'Localizacao', 'data' : 'area'},
+			            {'delete_rows': [0,1,2,3,4,6], 'filldown':[0], 'fillright':[0], 'multi-index': 1})
+	elif  __def_Test == 4:
+		# excel file (ine) with (date, geo, [select measure]) version
+		test3('eenvplus2_model.json', 'json', 'vinho_n_certificado',
+			       'producao_vinicola_declarada_vinho.xls', 'xls_ine', 'Quadro',
+		      {'date' : '2014', 'geo' : 'Local de vinificacao (NUTS - 2013)', 'data' : '5: Vinho sem certificacao'},
+			            {'delete_rows': [0,1,2,3,4,6,8,10], 'filldown':[0], 'fillright':[0, 1], 'multi-index': 2})
+	elif  __def_Test == 7:
+		# excel file reads file metadata
+		test7('superficie_uso_industrial_solo.xls', '', 'Quadro',
+			            {'delete_rows': [0,1,2,3,4,6], 'filldown':[0], 'fillright':[0], 'multi-index': 1})
+	elif  __def_Test == 8:
+		# excel file reads file metadata
+		test7('producao_vinicola_declarada_vinho.xls', '', 'Quadro',
+			            {'delete_rows': [0,1,2,3,4,6], 'filldown':[0], 'fillright':[0], 'multi-index': 1})
+	else:
+		print "no test option"

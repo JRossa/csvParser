@@ -9,14 +9,14 @@ import math
 
 #import ine data with two columns dimensions (ano & denominacao do vinho)
 ine = ExcelReader('producao_vinicola_declarada_vinho.xls',
-                     'Quadro', {'delete_rows': [0,1,2,3,4,6,8,10], 'filldown':[0], 'fillright':[0, 1], 'multi-index': 2})
+                  'Quadro',
+                  {'delete_rows': [0,1,2,3,4,6,8,10], 'filldown':[0], 'fillright':[0, 1], 'multi-index': 2})
 
 ine.fill_down_column()
 
 ine.delete_rows()
 ine.df = ine.df.reset_index(drop=True)
 
-ine.df = ine.df.where((pd.notnull(ine.df)), None)
 
 ine.fill_right_row()
 
@@ -39,7 +39,7 @@ column_names_tuples = [('Local de vinificacao (NUTS - 2013)',
 __sel_year = '2014'
 __sel_local = 'Local de vinificacao (NUTS - 2013)'
 __sel_data = '5: Vinho sem certificacao'
-__sel_data = 'T: Total'
+#__sel_data = 'T: Total'
 
 #select subset based on multi-indexes
 column_names_tuples = [(__sel_local, __sel_local),
@@ -79,9 +79,6 @@ cols = cols[-2:] + cols[:-2]
 # 8. replace the multi-indexes ine.df dataframe
 ine.df = valdf[cols]
 
-# 8. select rows with some data
-ine.df = ine.df[ine.df[__sel_data].notnull()]
-
 # test - ine.df['geo'] = pd.Series([0 for x in range(len(ine.df.index))])
 # 9. select the numerical info of localization
 for ind, place in ine.df.iterrows():
@@ -89,7 +86,13 @@ for ind, place in ine.df.iterrows():
 #    print place[__sel_local]
     a = place[__sel_local].split(':')
 #    print len(a), "   ind ", ind,
-    ine.df.ix[ind, __sel_local] = a[0]
+    if len(a[0]) > 6:
+        ine.df.ix[ind, __sel_local] = a[0][1:]
+    else:
+        ine.df.ix[ind, __sel_data] = None
+
+# 10. select rows with some data
+ine.df = ine.df[ine.df[__sel_data].notnull()]
 
 # not necessary - but looks better
 ine.df = ine.df.reset_index(drop=True)

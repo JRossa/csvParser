@@ -88,37 +88,37 @@ class postgresDB:
 		if self.conn == None:
 			return
 
-		createStatement = "CREATE TABLE public.ft_" + ft_tableName +" " \
-			"( " \
-				"id integer NOT NULL DEFAULT nextval('ft_" + ft_tableName + "_id_seq'::regclass), " \
-				"data_id integer, "  \
-				"geographyloures_id integer, " + \
-				measure + " integer, " \
-				"CONSTRAINT ft_" + ft_tableName + "_pkey PRIMARY KEY (id) " \
-			")"
+		createStatement = 'CREATE TABLE public.' + ft_tableName + ' ' \
+			'( ' \
+				'id integer NOT NULL DEFAULT nextval(\'' + ft_tableName + '_id_seq\'::regclass), ' \
+				'data_id integer, '  \
+				'geographyloures_id integer, ' + \
+				measure + ' integer, ' \
+				'CONSTRAINT ' + ft_tableName + '_pkey PRIMARY KEY (id) ' \
+			')'
 		print createStatement
 
-		alterTableStatement = "ALTER TABLE public.ft_" + ft_tableName + " " \
-									"OWNER TO postgres;"
+		alterTableStatement = 'ALTER TABLE public.' + ft_tableName + ' ' \
+									'OWNER TO postgres;'
 
-		createSeqStatement = "CREATE SEQUENCE public.ft_" + ft_tableName + "_id_seq " \
-								"INCREMENT 1 " \
-								"MINVALUE 1 " \
-								"MAXVALUE 9223372036854775807 " \
-								"START 1 " \
-								"CACHE 1; "
+		createSeqStatement = 'CREATE SEQUENCE public.' + ft_tableName + '_id_seq ' \
+								'INCREMENT 1 ' \
+								'MINVALUE 1 ' \
+								'MAXVALUE 9223372036854775807 ' \
+								'START 1 ' \
+								'CACHE 1; '
 
-		alterTableSeqStatement = "ALTER TABLE public.ft_" + ft_tableName + "_id_seq " \
-								"OWNER TO postgres;"
+		alterTableSeqStatement = 'ALTER TABLE public.' + ft_tableName + '_id_seq ' \
+								'OWNER TO postgres;'
 
 
-		grantPostGresStatement = "GRANT ALL ON TABLE public.ft_" + ft_tableName + " TO postgres;"
-		grantPublicStatement = "GRANT SELECT ON TABLE public.ft_" + ft_tableName + " TO public;"
+		grantPostGresStatement = 'GRANT ALL ON TABLE public.' + ft_tableName + ' TO postgres;'
+		grantPublicStatement = 'GRANT SELECT ON TABLE public.' + ft_tableName + ' TO public;'
 
 #		ckeckStatement = 'SELECT to_regclass(\'public.ft_' + ft_tableName + '\')'
 		ckeckStatement = 'SELECT EXISTS (SELECT 1 FROM   information_schema.tables ' \
    							'WHERE table_schema = \'public\' AND ' \
-   							'table_name = \'ft_' + ft_tableName + '\')'
+   							'table_name = \'' + ft_tableName + '\')'
 
 		print ckeckStatement
 
@@ -157,26 +157,26 @@ class postgresDB:
 			return
 
 		# https://www.postgresql.org/docs/9.2/static/datatype-numeric.html#DATATYPE-SERIAL
-		createStatement = "CREATE TABLE public.ft_" + ft_tableName +" " \
-			"( " \
-				"id SERIAL, " + \
-				fKey1 + " integer, " + \
-				fKey2 + " integer, " + \
-				measure + ", " \
-				"CONSTRAINT ft_" + ft_tableName + "_pkey PRIMARY KEY (id) " \
-			")"
+		createStatement = 'CREATE TABLE public.' + ft_tableName + ' ' \
+			'( ' \
+				'id SERIAL, ' + \
+				fKey1 + ' integer, ' + \
+				fKey2 + ' integer, ' + \
+				measure + ', ' \
+				'CONSTRAINT ' + ft_tableName + '_pkey PRIMARY KEY (id) ' \
+			')'
 		print createStatement
 
-		alterTableStatement = "ALTER TABLE public.ft_" + ft_tableName + " " \
-									"OWNER TO postgres;"
+		alterTableStatement = 'ALTER TABLE public.' + ft_tableName + ' ' \
+									'OWNER TO postgres;'
 
-		grantPostGresStatement = "GRANT ALL ON TABLE public.ft_" + ft_tableName + " TO postgres;"
-		grantPublicStatement = "GRANT SELECT ON TABLE public.ft_" + ft_tableName + " TO public;"
+		grantPostGresStatement = 'GRANT ALL ON TABLE public.' + ft_tableName + ' TO postgres;'
+		grantPublicStatement = 'GRANT SELECT ON TABLE public.' + ft_tableName + ' TO public;'
 
-		ckeckStatement = 'SELECT to_regclass(\'public.ft_' + ft_tableName + '\')'
+		ckeckStatement = 'SELECT to_regclass(\'public.' + ft_tableName + '\')'
 		ckeckStatement = 'SELECT EXISTS (SELECT 1 FROM   information_schema.tables ' \
    							'WHERE table_schema = \'public\' AND ' \
-   							'table_name = \'ft_' + ft_tableName + '\')'
+   							'table_name = \'' + ft_tableName + '\')'
 		print ckeckStatement
 
 		cursor = self.conn.cursor()
