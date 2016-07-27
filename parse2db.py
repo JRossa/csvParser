@@ -20,6 +20,7 @@ import csv
 
 import pprint
 import argparse
+import timeit
 
 from postgre_df import *
 from readprocessor_df import *
@@ -144,6 +145,7 @@ def parseData(pgDB, dfProc, dfXL, dbOptions):
 
 
 	print dfPKey
+	print "RESULT: Inserted " + str(dfPKey[column].count()) + " of " + str(len(dfPKey.index)) + " registers"
 
 
 def test1(procFileName, procType, dataFileName,  dataType):
@@ -151,11 +153,15 @@ def test1(procFileName, procType, dataFileName,  dataType):
 	__DB_Options =  __create_FT | __insert_FT
 
 	# Initial csv txt files version
-	rdXL = readExcel(dataFileName, dataType)
 	rdProc = readProcessor(procFileName,  procType)
+	dfProc = rdProc.getProcessorData()
+
+	if 'ERROR' in str(dfProc):
+		print dfProc
+		return
 
 	pgDB = postgresDB()
-	dfProc = rdProc.getProcessorData()
+	rdXL = readExcel(dataFileName, dataType)
 	dfXL = rdXL.getExcelData()
 
 	if (__DB_Options & __create_FT) == __create_FT:
@@ -178,6 +184,10 @@ def test2(procFileName, procType, dataFileName, dataType, sheetName, columnsSear
 
 	rdProc = readProcessor(procFileName, procType, ftName)
 	dfProc = rdProc.getProcessorData()
+
+	if 'ERROR' in str(dfProc):
+		print dfProc
+		return
 
 	rdXL = readExcel(dataFileName, dataType, sheetName,
 					 columnsSearch, dfProc.columns.tolist())
@@ -206,10 +216,12 @@ def test3(procFileName, procType, procFtName, dataFileName, dataType, sheetName,
 
 	__DB_Options =  __create_FT | __insert_FT
 
-	__fileName = 'excelreader/' + dataFileName
-
 	rdProc = readProcessor(procFileName, procType, procFtName)
 	dfProc = rdProc.getProcessorData()
+
+	if 'ERROR' in str(dfProc):
+		print dfProc
+		return
 
 	__dataFileName = 'excelreader/' + dataFileName
 
@@ -240,10 +252,10 @@ def test3(procFileName, procType, procFtName, dataFileName, dataType, sheetName,
 
 def test7(dataFileName, dataType, sheetName, configParam):
 
-	__fileName = 'excelreader/' + dataFileName
+	__dataFileName = 'excelreader/' + dataFileName
 
-	rdXL = readExcel(__fileName, dataType)
-	dfXL = rdXL.getExcelMetaData(__fileName, sheetName, configParam)
+	rdXL = readExcel(__dataFileName, dataType)
+	dfXL = rdXL.getExcelMetaData(__dataFileName, sheetName, configParam)
 
 	print json.dumps(dfXL)
 
@@ -255,6 +267,20 @@ def test8(dataFileName,  dataType, sheetName=None):
 	dfXL = rdXL.getExcelData()
 
 	print json.dumps(list(set(dfXL.columns)))
+
+
+def testProc(procFileName, procType, procFtName):
+
+	rdProc = readProcessor(procFileName,  procType, procFtName)
+
+
+	dfProc = rdProc.getProcessorData()
+
+	if 'ERROR' in str(dfProc):
+		print dfProc
+		return
+
+	print  dfProc
 
 
 if __name__ == "__main__":
@@ -270,7 +296,7 @@ if __name__ == "__main__":
 
 		# only one arg -> args.test
 		# several args (nargs='+') -> args.test[..n]
-		if args.test > 0 and args.test < 20:
+		if args.test > 0 and args.test < 200:
 			print args.test
 			__def_Test = args.test
 
@@ -314,5 +340,8 @@ if __name__ == "__main__":
 	elif  __def_Test == 10:
 		# excel file reads file metadata
 		test8('indicadores.xlsx', 'xls', 'indicadores')
+	elif  __def_Test == 100:
+		# proc file
+		testProc('eenvplus2_model.json', 'json', 'vinho_n_certificado')
 	else:
 		print "no test option"

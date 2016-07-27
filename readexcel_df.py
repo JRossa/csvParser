@@ -136,7 +136,7 @@ class readExcel:
 		cols = cols[::-1]
 		dfNew =dfNew[cols]
 
-		dfNew[__sel_local] = self.processDDCCFFCode(dfNew[__sel_local])
+		dfNew[__sel_local] = self.processDDCCFFCode(dfNew[__sel_local], 4)
 
 		return dfNew
 
@@ -159,17 +159,18 @@ class readExcel:
 
 		dfNew = dfNew[cols]
 
-		dfNew[__sel_local] = self.processDDCCFFCode(dfNew[__sel_local])
+		dfNew[__sel_local] = self.processDDCCFFCode(dfNew[__sel_local], 4)
 
 		return dfNew
 
 
-	def processDDCCFFCode(self, columnDDCCFF):
+	def processDDCCFFCode(self, columnDDCCFF, nDigits):
 		for ind, place in columnDDCCFF.iteritems():
 			a = place.split(':')
 
-			if len(a[0]) > 6:
-				columnDDCCFF.ix[ind] = a[0][len(a[0])-6:]
+
+			if len(a[0]) > nDigits:
+				columnDDCCFF.ix[ind] = a[0][len(a[0])-nDigits:]
 			else:
 				columnDDCCFF.ix[ind] = None
 

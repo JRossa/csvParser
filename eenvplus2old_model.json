@@ -85,11 +85,11 @@
             {"name": "vinho_n_certificado", "label": "Vinho sem certificação", "info": {"units": "hl", "name": "H litros"}}
         ],
         "dimensions": [
-           {"name": "geographyconcelho", "hierarchies": ["default"]},
+           {"name": "geography", "hierarchies": ["default"]},
            "date"
            ],
          "joins": [
-            {"master": "geography_id", "detail": "dm_geographyconcelho.id"},
+            {"master": "geography_id", "detail": "dm_geography.id"},
             {"master": "data_id", "detail": "dm_date.id"}
         ],
          "aggregates": [
@@ -150,38 +150,6 @@
            "hierarchy": ["year", "month_year", "month_name", "date"]
 
         },
-
-        {
-        "name":"geographyconcelho",
-        "processor" :
-              {
-              "value" : "concelho_code",
-              "pkey" : "id",
-              "fkey" : "geography_id"},
-         "label":"Localização",
-         "levels" : [
-           {
-             "name":"concelho",
-             "key": "concelho",
-               "attributes": [
-                 {"name":"concelho_code", "label": "concelho code"},
-                 {"name":"concelho", "label": "concelho"}
-                ]
-           },
-           {
-             "name":"areas",
-             "key":"areas",
-             "attributes": [
-                 {"name":"areas_code", "label": "areas code"},
-                 {"name":"areas", "label": "areas"}
-                 ]
-         }
-         ],
-         "hierarchies": [{
-             "name": "default",
-             "levels": ["concelho", "areas"]
-         }]
-       },
 
         {
         "name":"geography",

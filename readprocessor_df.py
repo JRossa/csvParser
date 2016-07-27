@@ -42,6 +42,8 @@ class readProcessor:
 #		pp.pprint ("DF - Cubes")
 #		pp.pprint (len(dfc))
 
+		found = False
+
 		# read cubes features data - ft
 		for cc in range(len(dfc)):
 			_ft = 'ft_' + dfc.ix[cc, ['name']][0]
@@ -50,17 +52,22 @@ class readProcessor:
 			ft_lst = [u'ft', _ft, _value, \
 					  _pkey, u'none']
 
+			ft_dm_lst = self.getCubesDimensions(dfc.ix[cc, ['dimensions']][0])
+
 			# stores dm list of lists
 			dm_lst = []
 			dfd = pd.DataFrame(sjson['dimensions'])
 
 			# for each fact read the dimensions data - dm
 			for dd in range(len(dfd)):
-				_dm = 'dm_' + dfd.ix[dd, ['name']][0]
-				_value = dfd.ix[dd, ['processor']][0]['value']
-				_pkey = dfd.ix[dd, ['processor']][0]['pkey']
-				_fkey = dfd.ix[dd, ['processor']][0]['fkey']
-				dm_lst.append([u'dm', _dm, _value, _pkey, _fkey])
+				# process only if belongs to ft_dm_lst domain
+				if dfd.ix[dd, ['name']][0] in ft_dm_lst:
+					_dm = 'dm_' + dfd.ix[dd, ['name']][0]
+					_value = dfd.ix[dd, ['processor']][0]['value']
+					_pkey = dfd.ix[dd, ['processor']][0]['pkey']
+					_fkey = dfd.ix[dd, ['processor']][0]['fkey']
+					dm_lst.append([u'dm', _dm, _value, _pkey, _fkey])
+					ft_dm_lst.remove(dfd.ix[dd, ['name']][0])
 
 			# start building output DataFrame
 			jdf = pd.DataFrame()
@@ -89,9 +96,33 @@ class readProcessor:
 
 			# select the ind ft
 			if dfc.ix[cc, ['name']][0] == ft_name:
+				found = True
 				break
 
+		if ft_name == None:
+			return "ERROR: ft_name missing !!"
+
+		if not found:
+			return "ERROR: \'" + ft_name + "\' not found in json file !!"
+
+		if ft_dm_lst != []:
+			return "ERROR: \'" + str(ft_dm_lst) + "\' dimensions not found in json file !!"
+
 		return jdf
+
+	def getCubesDimensions(self, dfc):
+
+		fm_dm_lst = []
+
+		for i in range(len(dfc)):
+			try:
+				fm_dm_lst.append(dfc[i]['name'])
+#				print dfc[i]['name']
+			except:
+				fm_dm_lst.append(dfc[i])
+#				print dfc[i]
+
+		return fm_dm_lst
 
 
 	def getProcessorData(self):
