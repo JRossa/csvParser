@@ -260,7 +260,7 @@ def test8(dataFileName,  dataType, sheetName=None):
 if __name__ == "__main__":
 
 	__def_Test = 5
-	__def_ParseMain = False
+	__def_ParseMain = True
 
 	if __def_ParseMain == True:
 		parser = argparse.ArgumentParser(description='Process application tests.')
@@ -268,9 +268,13 @@ if __name__ == "__main__":
 					   help=' - an integer for select the test')
 		args = parser.parse_args()
 
-		if args.test[0] > 0 and args.test[0] < 20:
-			print args.test[0]
-			__def_Test = args.test[0]
+		# only one arg -> args.test
+		# several args (nargs='+') -> args.test[..n]
+		if args.test > 0 and args.test < 20:
+			print args.test
+			__def_Test = args.test
+
+	print "Test n. " + str(__def_Test)
 
 	if __def_Test == 1:
 		# Initial csv txt files (date, geo, data) version
