@@ -19,12 +19,16 @@ import sys
 import csv
 
 import pprint
+import argparse
 
 from postgre_df import *
 from readprocessor_df import *
 from readexcel_df import *
 
 
+__insert_DM = 1
+__insert_FT = 2
+__create_FT = 4
 
 def validateHeaders(dataHdr, procHdr):
 
@@ -35,7 +39,7 @@ def validateHeaders(dataHdr, procHdr):
 
 
 # Parsing process
-def parseData(pgDB, dfProc, dfXL, insertDB):
+def parseData(pgDB, dfProc, dfXL, dbOptions):
 
 	dfPKey = pd.DataFrame(index=dfXL.index, columns=dfXL.columns)
 
@@ -69,7 +73,7 @@ def parseData(pgDB, dfProc, dfXL, insertDB):
 					insertStatement = 'INSERT INTO {0} ({1}) VALUES(\'{2}\')'.format(dfProc.ix['table', column],
 																				 dfProc.ix['value', column], val)
 					print(insertStatement)
-					if insertDB == True:
+					if (dbOptions & __insert_DM) == __insert_DM:
 						pgDB.insertDB(insertStatement)
 
 					maxStatement = 'SELECT max({0}) FROM {1}'.format(dfProc.ix['pkey', column],
@@ -128,7 +132,7 @@ def parseData(pgDB, dfProc, dfXL, insertDB):
 						                     dfProc.ix['value', column], insertFields, val, insertValues)
 
 					print(insertStatement)
-					if insertDB == True:
+					if (dbOptions & __insert_FT) == __insert_FT:
 						pgDB.insertDB(insertStatement)
 
 					# It's not necessary - only for insertion check purpose
@@ -144,7 +148,7 @@ def parseData(pgDB, dfProc, dfXL, insertDB):
 
 def test1(procFileName, procType, dataFileName,  dataType):
 
-	__DB_Test = False
+	__DB_Options =  __create_FT | __insert_FT
 
 	# Initial csv txt files version
 	rdXL = readExcel(dataFileName, dataType)
@@ -154,7 +158,7 @@ def test1(procFileName, procType, dataFileName,  dataType):
 	dfProc = rdProc.getProcessorData()
 	dfXL = rdXL.getExcelData()
 
-	if __DB_Test == True:
+	if (__DB_Options & __create_FT) == __create_FT:
 		__def_ft_attr = dfProc.columns[-1:][0] + ' integer'
 
 		pgDB.createTableFT(dfProc.ix['table', 2], dfProc.ix['fkey', 0],
@@ -165,12 +169,12 @@ def test1(procFileName, procType, dataFileName,  dataType):
 	print dfXL
 #	print dfPKey
 
-	parseData(pgDB, dfProc, dfXL, False)
+	parseData(pgDB, dfProc, dfXL, __DB_Options)
 
 
 def test2(procFileName, procType, dataFileName, dataType, sheetName, columnsSearch, ftName):
 
-	__DB_Test = True
+	__DB_Options =  __create_FT | __insert_FT
 
 	rdProc = readProcessor(procFileName, procType, ftName)
 	dfProc = rdProc.getProcessorData()
@@ -181,7 +185,7 @@ def test2(procFileName, procType, dataFileName, dataType, sheetName, columnsSear
 	pgDB = postgresDB()
 	dfXL = rdXL.getExcelData()
 
-	if __DB_Test == True:
+	if (__DB_Options & __create_FT) == __create_FT:
 		__def_ft_attr = dfProc.columns[-1:][0] + ' integer'
 
 		pgDB.createTableFT(dfProc.ix['table', 2], dfProc.ix['fkey', 0],
@@ -195,12 +199,12 @@ def test2(procFileName, procType, dataFileName, dataType, sheetName, columnsSear
 	print dfXL
 #	print dfPKey
 
-	parseData(pgDB, dfProc, dfXL, True)
+	parseData(pgDB, dfProc, dfXL, __DB_Options)
 
 
 def test3(procFileName, procType, procFtName, dataFileName, dataType, sheetName, columnsSearch, configParam):
 
-	__DB_Test = False
+	__DB_Options =  __create_FT | __insert_FT
 
 	__fileName = 'excelreader/' + dataFileName
 
@@ -215,7 +219,7 @@ def test3(procFileName, procType, procFtName, dataFileName, dataType, sheetName,
 	pgDB = postgresDB()
 	dfXL = rdXL.getExcelData()
 
-	if __DB_Test == True:
+	if (__DB_Options & __create_FT) == __create_FT:
 		__def_ft_attr = dfProc.columns[-1:][0] + ' integer'
 
 		pgDB.createTableFT(dfProc.ix['table', 2], dfProc.ix['fkey', 0],
@@ -229,7 +233,8 @@ def test3(procFileName, procType, procFtName, dataFileName, dataType, sheetName,
 	print dfXL
 #	print dfPKey
 
-	parseData(pgDB, dfProc, dfXL, False)
+
+	parseData(pgDB, dfProc, dfXL, __DB_Options)
 
 
 
@@ -254,7 +259,18 @@ def test8(dataFileName,  dataType, sheetName=None):
 
 if __name__ == "__main__":
 
-	__def_Test = 8
+	__def_Test = 5
+	__def_ParseMain = False
+
+	if __def_ParseMain == True:
+		parser = argparse.ArgumentParser(description='Process application tests.')
+		parser.add_argument('test', metavar='Test Number', type=int, # nargs='+'
+					   help=' - an integer for select the test')
+		args = parser.parse_args()
+
+		if args.test[0] > 0 and args.test[0] < 20:
+			print args.test[0]
+			__def_Test = args.test[0]
 
 	if __def_Test == 1:
 		# Initial csv txt files (date, geo, data) version
@@ -273,6 +289,12 @@ if __name__ == "__main__":
 		test3('eenvplus2_model.json', 'json', 'vinho_n_certificado',
 			       'producao_vinicola_declarada_vinho.xls', 'xls_ine', 'Quadro',
 		      {'date' : '2014', 'geo' : 'Local de vinificacao (NUTS - 2013)', 'data' : '5: Vinho sem certificacao'},
+			            {'delete_rows': [0,1,2,3,4,6,8,10], 'filldown':[0], 'fillright':[0, 1], 'multi-index': 2})
+	elif  __def_Test == 5:
+		# excel file (ine) with (date, geo, [select measure]) version
+		test3('eenvplus2_model.json', 'json', 'vinho_n_certificado',
+			       'producao_vinicola_declarada_vinho.xls', 'xls_ine', 'Quadro',
+		      {'date' : '2015', 'geo' : 'Local de vinificacao (NUTS - 2013)', 'data' : '5: Vinho sem certificacao'},
 			            {'delete_rows': [0,1,2,3,4,6,8,10], 'filldown':[0], 'fillright':[0, 1], 'multi-index': 2})
 	elif  __def_Test == 7:
 		# excel file reads file metadata
