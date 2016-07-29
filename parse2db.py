@@ -273,7 +273,6 @@ def testProc(procFileName, procType, procFtName):
 
 	rdProc = readProcessor(procFileName,  procType, procFtName)
 
-
 	dfProc = rdProc.getProcessorData()
 
 	if 'ERROR' in str(dfProc):
@@ -281,6 +280,34 @@ def testProc(procFileName, procType, procFtName):
 		return
 
 	print  dfProc
+
+
+def testProcImport(procFileName, procMetaDataName):
+
+	procType = 'json'
+	rdProc  = readProcessor(procFileName,  procType, procMetaDataName)
+
+	impProc = rdProc.getProcessorData().ix[0]
+
+	print impProc.cubes
+	print impProc.file
+	print impProc.type
+	print impProc.worksheet
+	print impProc.date
+	print impProc.geo
+	print impProc.measures
+	print impProc.config
+
+	for date in impProc.date:
+		for ft in impProc.measures:
+			print str(date) + " - " + str(ft)
+			columnsSearch = {'date' : date, 'geo' : impProc.geo, 'data' : ft}
+			test3(procFileName, procType, impProc.cubes, impProc.file,
+				   impProc.type, impProc.worksheet, columnsSearch, impProc.config)
+
+
+
+#	print  impProc
 
 
 if __name__ == "__main__":
@@ -326,20 +353,27 @@ if __name__ == "__main__":
 			       'producao_vinicola_declarada_vinho.xls', 'xls_ine', 'Quadro',
 		      {'date' : '2015', 'geo' : 'Local de vinificacao (NUTS - 2013)', 'data' : '5: Vinho sem certificacao'},
 			            {'delete_rows': [0,1,2,3,4,6,8,10], 'filldown':[0], 'fillright':[0, 1], 'multi-index': 2})
-	elif  __def_Test == 7:
+	elif  __def_Test == 10:
 		# excel file reads file metadata
 		test7('superficie_uso_industrial_solo.xls', '', 'Quadro',
 			            {'delete_rows': [0,1,2,3,4,6], 'filldown':[0], 'fillright':[0], 'multi-index': 1})
-	elif  __def_Test == 8:
+	elif  __def_Test == 11:
 		# excel file reads file metadata
 		test7('producao_vinicola_declarada_vinho.xls', '', 'Quadro',
 			            {'delete_rows': [0,1,2,3,4,6], 'filldown':[0], 'fillright':[0], 'multi-index': 1})
-	elif  __def_Test == 9:
+	elif  __def_Test == 12:
+		# excel file reads file metadata
+		test7('producao_vinicola_declarada_vinho.xls', '', 'Quadro',
+			            {'delete_rows': [0,1,2,3,4,6], 'filldown':[0], 'fillright':[0, 1], 'multi-index': 2})
+	elif  __def_Test == 20:
 		# excel file reads file metadata
 		test8('formato_ficheiro_processamento.txt', 'csv')
-	elif  __def_Test == 10:
+	elif  __def_Test == 30:
 		# excel file reads file metadata
 		test8('indicadores.xlsx', 'xls', 'indicadores')
+	elif  __def_Test == 50:
+		# proc file
+		testProcImport('eenvplus2_model.json', 'import')
 	elif  __def_Test == 100:
 		# proc file
 		testProc('eenvplus2_model.json', 'json', 'vinho_n_certificado')

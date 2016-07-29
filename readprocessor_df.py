@@ -10,10 +10,10 @@ class readProcessor:
 		self.fileName = fileName
 		self.fileType = fileType
 
-		if (self.fileType == 'json'):
+		if self.fileType == 'json':
 			self.df = self.readJSONFile(self.fileName, ft_name)
 
-		if (self.fileType == 'csv'):
+		if self.fileType == 'csv':
 			self.df = self.readCSVFile(self.fileName)
 
 
@@ -35,6 +35,10 @@ class readProcessor:
 
 		# read json file - series (dataframe doesn't work)
 		sjson = pd.read_json(fileName, typ='series')
+
+		if ft_name == 'import':
+			dfc = pd.DataFrame(sjson['import'])
+			return dfc
 
 		# start process json file
 		dfc = pd.DataFrame(sjson['cubes'])
