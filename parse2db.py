@@ -282,7 +282,30 @@ def testProc(procFileName, procType, procFtName):
 	print  dfProc
 
 
-def testProcImport(procFileName, procMetaDataName):
+def testProcImport2(procFileName, procMetaDataName):
+
+	procType = 'json'
+	rdProc  = readProcessor(procFileName,  procType, procMetaDataName)
+
+	impProc = rdProc.getProcessorData().ix[0]
+
+	print impProc.cubes
+	print impProc.file
+	print impProc.type
+	print impProc.worksheet
+	print impProc.date
+	print impProc.geo
+	print impProc.measures
+
+	for date in impProc.date:
+		for ft in impProc.measures:
+			print str(date) + " - " + str(ft)
+			columnsSearch = [date, impProc.geo, ft]
+			test2(procFileName, procType, impProc.file, impProc.type, impProc.worksheet,
+				       ['date', 'DICOFRE', 'TOT_POP91'], impProc.cubes)
+
+
+def testProcImport3(procFileName, procMetaDataName):
 
 	procType = 'json'
 	rdProc  = readProcessor(procFileName,  procType, procMetaDataName)
@@ -334,7 +357,7 @@ if __name__ == "__main__":
 		test1('formato_ficheiro_processamento.txt', 'csv', 'formato_ficheiro_carregamento.txt', 'csv')
 	elif  __def_Test == 2:
 		# excel file (non ine) with (date, geo, [select measure]) version
-		test2('eenvplus_model.json', 'json', 'indicadores.xlsx', 'xls', 'indicadores', ['date', 'DICOFRE', 'TOT_POP91' ], 'populacao')
+		test2('eenvplus_model.json', 'json', 'indicadores.xlsx', 'xls', 'indicadores', ['date', 'DICOFRE', 'TOT_POP91'], 'populacao')
 	elif  __def_Test == 3:
 		# excel file (ine) with (date, geo, [select measure]) version
 		test3('eenvplus_model.json', 'json', 'cos',
@@ -373,7 +396,10 @@ if __name__ == "__main__":
 		test8('indicadores.xlsx', 'xls', 'indicadores')
 	elif  __def_Test == 50:
 		# proc file
-		testProcImport('eenvplus2_model.json', 'import')
+		testProcImport2('eenvplus_model.json', 'import')
+	elif  __def_Test == 51:
+		# proc file
+		testProcImport3('eenvplus2_model.json', 'import')
 	elif  __def_Test == 100:
 		# proc file
 		testProc('eenvplus2_model.json', 'json', 'vinho_n_certificado')

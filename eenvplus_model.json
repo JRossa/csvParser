@@ -1,5 +1,14 @@
 {
    "name" : "eenvplus",
+   "import" : [{
+      "cubes" : "populacao",
+      "file" : "indicadores.xlsx",
+      "type" : "xls",
+      "worksheet": "indicadores",
+      "date" : ["date"],
+      "geo" : "DICOFRE",
+      "measures" : ["TOT_POP91"]
+    }],
    "locale":"en",
    "cubes": [
         {
