@@ -1,12 +1,31 @@
+#----------------------------------------------------------------------------------
+#   JR - 2016-07-29
+#
+# 1. Create directory and file
+# ./definitions/postgresDB.conf
+#
+# 2. Set the config params
+#  host=localhost
+#  dbname=django_cubes
+#  username=django
+#  password=django
+#
+#
+#----------------------------------------------------------------------------------
 
 import psycopg2
 import psycopg2.extras
+
+import sys
+sys.path.insert(0, 'excelreader/')
+
+from definitions import *
 
 class postgresDB:
 
 	def __init__(self):
 
-		conn_string = "host='localhost' dbname='django_cubes' user='django' password='django'"
+		conn_string = self.getConnection("./definitions/postgresDB.conf")
 
 		# print the connection string we will use to connect
 		print ("Connecting to database\n	->%s" % (conn_string))
@@ -66,6 +85,24 @@ class postgresDB:
 		cursor.close()
 
 		return rSet
+
+
+	# read the config file
+	def getConnection(self, definitions_file):
+
+		try:
+			definitions = Definitions(definitions_file)
+			host = definitions.config['host']
+			dbname= definitions.config['dbname']
+			user = definitions.config['username']
+			password = definitions.config['password']
+
+			print definitions_file
+			conn_string = "host=" + host + " dbname=" + dbname + " user=" + user + " password=" + password
+		except:
+			conn_string = "host='localhost' dbname='django_cubes' user='django' password='django'"
+
+		return conn_string
 
 
 	# Perform the insert statement

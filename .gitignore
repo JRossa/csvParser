@@ -66,6 +66,7 @@ target/
 .idea/
 #excelreader/
 testes_py35/
+definitions/
 
 preadjson.py
 *.zip
