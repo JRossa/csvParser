@@ -297,12 +297,22 @@ def testProcImport2(procFileName, procMetaDataName):
 	print impProc.geo
 	print impProc.measures
 
-	for date in impProc.date:
-		for ft in impProc.measures:
-			print str(date) + " - " + str(ft)
-			columnsSearch = [date, impProc.geo, ft]
-			test2(procFileName, procType, impProc.file, impProc.type, impProc.worksheet,
-				       ['date', 'DICOFRE', 'TOT_POP91'], impProc.cubes)
+	if impProc.type == 'xls_ine':
+		print impProc.config
+
+		for date in impProc.date:
+			for ft in impProc.measures:
+				print str(date) + " - " + str(ft)
+				columnsSearch = {'date' : date, 'geo' : impProc.geo, 'data' : ft}
+				test3(procFileName, procType, impProc.cubes, impProc.file,
+					   impProc.type, impProc.worksheet, columnsSearch, impProc.config)
+	elif impProc.type == 'xls':
+		for date in impProc.date:
+			for ft in impProc.measures:
+				print str(date) + " - " + str(ft)
+				columnsSearch = [date, impProc.geo, ft]
+				test2(procFileName, procType, impProc.file, impProc.type, impProc.worksheet,
+						   ['date', 'DICOFRE', 'TOT_POP91'], impProc.cubes)
 
 
 def testProcImport3(procFileName, procMetaDataName):
@@ -319,14 +329,16 @@ def testProcImport3(procFileName, procMetaDataName):
 	print impProc.date
 	print impProc.geo
 	print impProc.measures
-	print impProc.config
 
-	for date in impProc.date:
-		for ft in impProc.measures:
-			print str(date) + " - " + str(ft)
-			columnsSearch = {'date' : date, 'geo' : impProc.geo, 'data' : ft}
-			test3(procFileName, procType, impProc.cubes, impProc.file,
-				   impProc.type, impProc.worksheet, columnsSearch, impProc.config)
+	if impProc.type == 'xls_ine':
+		print impProc.config
+
+		for date in impProc.date:
+			for ft in impProc.measures:
+				print str(date) + " - " + str(ft)
+				columnsSearch = {'date' : date, 'geo' : impProc.geo, 'data' : ft}
+				test3(procFileName, procType, impProc.cubes, impProc.file,
+					   impProc.type, impProc.worksheet, columnsSearch, impProc.config)
 
 
 
