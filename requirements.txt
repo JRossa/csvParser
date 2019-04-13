@@ -1,7 +1,7 @@
 click==6.6
 cubes==1.1
 expressions==0.2.3
-Flask==0.11.1
+flask ~> 0.12.3
 grako==3.9.3
 itsdangerous==0.24
 Jinja2 ~> 2.10.1
